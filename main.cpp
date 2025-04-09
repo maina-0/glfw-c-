@@ -3,10 +3,23 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+void key_callback(GLFWwindow *window,int key,int scancode,int action,int mode){
+    if(key==GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window,GL_TRUE);
+}
+
+GLfloat vertices[]={
+    -0.5f,-0.5f,0.0f,
+    0.5f,-0.5f,0.0f,
+    0.0f,0.5f,0.0f
+};
+
+
 int main(){ 
     glfwInit();
     glfwDefaultWindowHints();
-    if (glfwCreateWindow(1920,720,"OpenGL",nullptr,nullptr) == nullptr){
+    GLFWwindow* window = glfwCreateWindow(1921,720,"OpenGL",nullptr,nullptr);
+            if (window == nullptr){
         std::cout<<"failed to create GLFW window\n";
         glfwTerminate();
         return -1;
@@ -14,12 +27,46 @@ int main(){
 
     glfwMakeContextCurrent(window);
 
-    glewExperimental=GL_TRUE;
+ //   glewExperimental=GL_TRUE;
+
+    glfwSetKeyCallback(window,key_callback);
 
     if (glewInit()!= GLEW_OK){
         std::cout<<"Glew Failed to initialize\n";
         return -1;
     }
+
+    GLuint VBO;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    const char* vertexShaderSource =R"glsl(
+    #version 460 core
+        layout (location = 0) in vec3 position;
+        void main() {
+            gl_Position = vec4(position.x, position.y, position.z, 1.0);
+        }
+    )glsl";
+
+    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
+    glCompileShader(vertexShader);
+
+
+
+    glViewport(0,0,1920,720);
+
+    while(!glfwWindowShouldClose(window)){
+        glfwPollEvents();
+
+        glClearColor(0.0f,0.5f,0.5f,1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        
+        glfwSwapBuffers(window);
+    }
+
+    glfwTerminate();
 
     return 0;
 }
